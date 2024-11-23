@@ -11,7 +11,8 @@ public class Main {
         String accessKey = dotenv.get("AWS_ACCESS_KEY");
         String secretKey = dotenv.get("AWS_SECRET_ACCESS_KEY");
 
-        s3FileCopy(accessKey, secretKey);
+//        s3FileCopy(accessKey, secretKey);
+//        s3FileDownload(accessKey, secretKey);
     }
 
     private static void s3FileCopy(String accessKey, String secretKey) {

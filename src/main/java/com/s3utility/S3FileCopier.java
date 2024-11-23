@@ -12,10 +12,10 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 public class S3FileCopier {
-    private static final String SOURCE_BUCKET = "testbucket-julee";
-    private static final String TARGET_BUCKET = "staccato-images-prod";
-    private static final String SOURCE_FOLDER = "testfolder";
-    private static final String TARGET_FOLDER = "staccato-images";
+    private static final String SOURCE_BUCKET = "source_bucket";
+    private static final String TARGET_BUCKET = "target_bucket";
+    private static final String SOURCE_FOLDER = "source_folder";
+    private static final String TARGET_FOLDER = "target_folder";
 
     private final S3Client s3Client;
 

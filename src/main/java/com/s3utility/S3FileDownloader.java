@@ -15,8 +15,8 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 public class S3FileDownloader {
-    private static final String BUCKET_NAME = "testbucket-julee";
-    private static final String FOLDER_NAME = "testfolder";
+    private static final String BUCKET_NAME = "bucket_name";
+    private static final String FOLDER_NAME = "folder_name";
 
     private final S3Client s3Client;
 
