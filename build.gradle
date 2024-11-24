@@ -28,3 +28,9 @@ jar {
         attributes 'Main-Class': 'com.s3utility.Main'
     }
 }
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
