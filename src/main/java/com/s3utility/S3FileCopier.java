@@ -12,19 +12,24 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 public class S3FileCopier {
-    private static final String SOURCE_BUCKET = "source_bucket";
-    private static final String TARGET_BUCKET = "target_bucket";
-    private static final String SOURCE_FOLDER = "source_folder";
-    private static final String TARGET_FOLDER = "target_folder";
 
     private final S3Client s3Client;
+    private final String sourceBucket;
+    private final String sourceFolder;
+    private final String targetBucket;
+    private final String targetFolder;
 
-    public S3FileCopier(String accessKey, String secretKey, Region region) {
+    public S3FileCopier(String accessKey, String secretKey, Region region,
+                        String sourceBucket, String sourceFolder, String targetBucket, String targetFolder) {
         AwsBasicCredentials awsCredentials = AwsBasicCredentials.create(accessKey, secretKey);
         this.s3Client = S3Client.builder()
                 .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
                 .region(region)
                 .build();
+        this.sourceBucket = sourceBucket;
+        this.sourceFolder = sourceFolder;
+        this.targetBucket = targetBucket;
+        this.targetFolder = targetFolder;
     }
 
     public void copyFolderBetweenBuckets() {
@@ -32,8 +37,8 @@ public class S3FileCopier {
 
         do {
             ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
-                    .bucket(SOURCE_BUCKET)
-                    .prefix(SOURCE_FOLDER)
+                    .bucket(sourceBucket)
+                    .prefix(sourceFolder)
                     .continuationToken(continuationToken)
                     .build();
 
@@ -42,7 +47,7 @@ public class S3FileCopier {
 
             for (S3Object object : objects) {
                 String sourceKey = object.key();
-                String targetKey = TARGET_FOLDER + sourceKey.substring(SOURCE_FOLDER.length());
+                String targetKey = targetFolder + sourceKey.substring(sourceFolder.length());
                 copyObject(sourceKey, targetKey);
             }
 
@@ -56,9 +61,9 @@ public class S3FileCopier {
         }
 
         CopyObjectRequest copyRequest = CopyObjectRequest.builder()
-                .sourceBucket(SOURCE_BUCKET)
+                .sourceBucket(sourceBucket)
                 .sourceKey(sourceKey)
-                .destinationBucket(TARGET_BUCKET)
+                .destinationBucket(targetBucket)
                 .destinationKey(targetKey)
                 .build();
 
@@ -67,7 +72,7 @@ public class S3FileCopier {
 
     private boolean doesObjectExist(String key) {
         try {
-            s3Client.headObject(b -> b.bucket(TARGET_BUCKET).key(key));
+            s3Client.headObject(b -> b.bucket(targetBucket).key(key));
             return true;
         } catch (Exception e) {
             return false;

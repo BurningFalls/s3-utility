@@ -15,17 +15,20 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 public class S3FileDownloader {
-    private static final String BUCKET_NAME = "bucket_name";
-    private static final String FOLDER_NAME = "folder_name";
 
     private final S3Client s3Client;
+    private final String sourceBucket;
+    private final String sourceFolder;
 
-    public S3FileDownloader(String accessKey, String secretKey, Region region) {
+    public S3FileDownloader(String accessKey, String secretKey, Region region,
+                            String sourceBucket, String sourceFolder) {
         this.s3Client = S3Client.builder()
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(accessKey, secretKey)))
                 .region(region)
                 .build();
+        this.sourceBucket = sourceBucket;
+        this.sourceFolder = sourceFolder;
     }
 
     public void downloadFilesWithPrefix() {
@@ -38,8 +41,8 @@ public class S3FileDownloader {
         }
 
         ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
-                .bucket(BUCKET_NAME)
-                .prefix(FOLDER_NAME)
+                .bucket(sourceBucket)
+                .prefix(sourceFolder)
                 .build();
 
         ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
@@ -56,7 +59,7 @@ public class S3FileDownloader {
 
     private void downloadFile(String key, Path destinationPath) {
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                .bucket(BUCKET_NAME)
+                .bucket(sourceBucket)
                 .key(key)
                 .build();
 
