@@ -22,15 +22,3 @@ dependencies {
 test {
     useJUnitPlatform()
 }
-
-jar {
-    manifest {
-        attributes 'Main-Class': 'com.s3utility.Main'
-    }
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
-}
