@@ -51,6 +51,10 @@ public class S3FileCopier {
     }
 
     private void copyObject(String sourceKey, String targetKey) {
+        if (doesObjectExist(targetKey)) {
+            return;
+        }
+
         CopyObjectRequest copyRequest = CopyObjectRequest.builder()
                 .sourceBucket(SOURCE_BUCKET)
                 .sourceKey(sourceKey)
@@ -59,5 +63,14 @@ public class S3FileCopier {
                 .build();
 
         s3Client.copyObject(copyRequest);
+    }
+
+    private boolean doesObjectExist(String key) {
+        try {
+            s3Client.headObject(b -> b.bucket(TARGET_BUCKET).key(key));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
