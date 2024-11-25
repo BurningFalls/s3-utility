@@ -5,8 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -23,15 +22,16 @@ public class S3FileDownloader {
     public S3FileDownloader(String accessKey, String secretKey, Region region,
                             String sourceBucket, String sourceFolder) {
         this.s3Client = S3Client.builder()
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(accessKey, secretKey)))
+//                .credentialsProvider(StaticCredentialsProvider.create(
+//                        AwsBasicCredentials.create(accessKey, secretKey)))
+                .credentialsProvider(InstanceProfileCredentialsProvider.create())
                 .region(region)
                 .build();
         this.sourceBucket = sourceBucket;
         this.sourceFolder = sourceFolder;
     }
 
-    public void downloadFilesWithPrefix() {
+    public void downloadFiles() {
         Path destinationPath = Path.of(System.getProperty("user.dir"), "downloads");
 
         try {
@@ -40,35 +40,54 @@ public class S3FileDownloader {
             throw new RuntimeException("Failed to create destination directory: " + destinationPath, e);
         }
 
-        ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
-                .bucket(sourceBucket)
-                .prefix(sourceFolder)
-                .build();
+        String continuationToken = null;
+        int successCount = 0;
+        int totalObjectCount = 0;
 
-        ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
-        List<S3Object> objects = listResponse.contents();
+        do {
+            ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
+                    .bucket(sourceBucket)
+                    .prefix(sourceFolder)
+                    .continuationToken(continuationToken)
+                    .build();
 
-        for (S3Object object : objects) {
-            String key = object.key();
-            if (key.endsWith("/")) {
-                continue;
+            ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
+            List<S3Object> objects = listResponse.contents();
+            totalObjectCount += objects.size();
+
+            for (S3Object object : objects) {
+                String key = object.key();
+                if (key.endsWith("/")) {
+                    continue;
+                }
+
+                try {
+                    downloadFile(key, destinationPath);
+                    successCount++;
+                    System.out.println("Successfully downloaded: " + successCount);
+                } catch (Exception e) {
+                    System.err.println("Failed to download: " + e.getMessage());
+                }
             }
-            downloadFile(key, destinationPath);
+            continuationToken = listResponse.nextContinuationToken();
+        } while (continuationToken != null);
+
+        if (successCount == totalObjectCount) {
+            System.out.println("All files were downloaded successfully!");
+        } else {
+            System.out.println("Some files failed to download. Total failures: " + (totalObjectCount - successCount));
         }
     }
 
-    private void downloadFile(String key, Path destinationPath) {
+    private void downloadFile(String key, Path destinationPath) throws IOException {
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(sourceBucket)
                 .key(key)
                 .build();
 
         Path filePath = destinationPath.resolve(key);
-        try {
-            Files.createDirectories(filePath.getParent());
-            s3Client.getObject(getObjectRequest, filePath);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to download " + key + ": " + e.getMessage());
-        }
+
+        Files.createDirectories(filePath.getParent());
+        s3Client.getObject(getObjectRequest, filePath);
     }
 }
