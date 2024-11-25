@@ -82,6 +82,7 @@ public class S3FileCopier {
                 .sourceKey(sourceKey)
                 .destinationBucket(targetBucket)
                 .destinationKey(targetKey)
+                .acl("bucket-owner-full-control")
                 .build();
 
         s3Client.copyObject(copyRequest);
