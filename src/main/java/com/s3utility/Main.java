@@ -16,7 +16,8 @@ public class Main {
         String targetFolder = dotenv.get("AWS_TARGET_FOLDER");
 
 //        s3FileCopy(accessKey, secretKey, region, sourceBucket, sourceFolder, targetBucket, targetFolder);
-        s3FileDownload(accessKey, secretKey, region, sourceBucket, sourceFolder);
+//        s3FileDownload(accessKey, secretKey, region, sourceBucket, sourceFolder);
+        s3FileUpload(accessKey, secretKey, region, targetBucket, targetFolder);
     }
 
     private static void s3FileCopy(String accessKey, String secretKey, Region region,
@@ -32,5 +33,12 @@ public class Main {
         S3FileDownloader downloader = new S3FileDownloader(accessKey, secretKey, region, sourceBucket, sourceFolder);
 
         downloader.downloadFiles();
+    }
+
+    private static void s3FileUpload(String accessKey, String secretKey, Region region,
+                                     String targetBucket, String targetFolder) {
+        S3FileUploader uploader = new S3FileUploader(accessKey, secretKey, region, targetBucket, targetFolder);
+
+        uploader.uploadFiles();
     }
 }
