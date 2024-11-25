@@ -77,6 +77,8 @@ public class S3FileCopier {
             return;
         }
 
+        System.out.println("sourceKey: " + sourceKey + ", " + "targetKey: " + targetKey);
+
         CopyObjectRequest copyRequest = CopyObjectRequest.builder()
                 .sourceBucket(sourceBucket)
                 .sourceKey(sourceKey)
