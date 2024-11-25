@@ -3,6 +3,7 @@ package com.s3utility;
 import java.util.List;
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -21,9 +22,10 @@ public class S3FileCopier {
 
     public S3FileCopier(String accessKey, String secretKey, Region region,
                         String sourceBucket, String sourceFolder, String targetBucket, String targetFolder) {
-        AwsBasicCredentials awsCredentials = AwsBasicCredentials.create(accessKey, secretKey);
+//        AwsBasicCredentials awsCredentials = AwsBasicCredentials.create(accessKey, secretKey);
         this.s3Client = S3Client.builder()
-                .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
+//                .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
+                .credentialsProvider(InstanceProfileCredentialsProvider.create())
                 .region(region)
                 .build();
         this.sourceBucket = sourceBucket;
