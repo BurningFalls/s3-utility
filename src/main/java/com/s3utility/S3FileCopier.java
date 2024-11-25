@@ -33,6 +33,8 @@ public class S3FileCopier {
     }
 
     public void copyFolderBetweenBuckets() {
+        int sourceFilesCount = 0;
+        int successFilesCount = 0;
         String continuationToken = null;
 
         do {
@@ -44,15 +46,28 @@ public class S3FileCopier {
 
             ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
             List<S3Object> objects = listResponse.contents();
+            sourceFilesCount += objects.size();
 
             for (S3Object object : objects) {
                 String sourceKey = object.key();
                 String targetKey = targetFolder + sourceKey.substring(sourceFolder.length());
-                copyObject(sourceKey, targetKey);
+                try {
+                    copyObject(sourceKey, targetKey);
+                    successFilesCount += 1;
+                    System.out.println("Success to copy file #" + successFilesCount);
+                } catch (Exception e) {
+                    System.err.println("Failed to copy file:" + e.getMessage());
+                }
             }
 
             continuationToken = listResponse.nextContinuationToken();
         } while (continuationToken != null);
+
+        if (sourceFilesCount != successFilesCount) {
+            System.err.println(sourceFilesCount - successFilesCount + " files were not copied successfully.");
+        } else {
+            System.out.println("All " + sourceFilesCount + " files were copied successfully.");
+        }
     }
 
     private void copyObject(String sourceKey, String targetKey) {
