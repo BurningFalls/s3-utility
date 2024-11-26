@@ -41,8 +41,9 @@ public class S3FileDownloader {
         }
 
         String continuationToken = null;
-        int successCount = 0;
         int totalObjectCount = 0;
+        int successCount = 0;
+        int skippedCount = 0;
 
         do {
             ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
@@ -61,22 +62,29 @@ public class S3FileDownloader {
                     continue;
                 }
 
+                Path filePath = destinationPath.resolve(key);
+                if (Files.exists(filePath)) {
+                    skippedCount++;
+                    System.out.println("Skipped existing file: " + totalObjectCount);
+                    continue;
+                }
+
                 try {
                     downloadFile(key, destinationPath);
                     successCount++;
-                    System.out.println("Successfully downloaded: " + successCount);
+                    System.out.println("Successfully downloaded: " + totalObjectCount);
                 } catch (Exception e) {
-                    System.err.println("Failed to download: " + e.getMessage());
+                    System.err.println("Failed to download: " + totalObjectCount + " -> " + e.getMessage());
                 }
             }
             continuationToken = listResponse.nextContinuationToken();
         } while (continuationToken != null);
 
-        if (successCount == totalObjectCount) {
-            System.out.println("All files were downloaded successfully!");
-        } else {
-            System.out.println("Some files failed to download. Total failures: " + (totalObjectCount - successCount));
-        }
+        System.out.println("\nDownload Summary:");
+        System.out.println("Total objects: " + totalObjectCount);
+        System.out.println("Successfully downloaded: " + successCount);
+        System.out.println("Skipped (already exists): " + skippedCount);
+        System.out.println("Failed to download: " + (totalObjectCount - successCount - skippedCount));
     }
 
     private void downloadFile(String key, Path destinationPath) throws IOException {

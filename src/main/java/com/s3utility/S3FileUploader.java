@@ -10,6 +10,8 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 public class S3FileUploader {
@@ -35,31 +37,39 @@ public class S3FileUploader {
             throw new IllegalArgumentException("Invalid directory path: " + LOCAL_DIRECTORY);
         }
 
+        int totalObjectCount = 0;
         int successCount = 0;
-        int failureCount = 0;
+        int skippedCount = 0;
 
         try (Stream<Path> files = Files.walk(sourcePath)) {
             for (Path file : (Iterable<Path>) files.filter(Files::isRegularFile)::iterator) {
+                totalObjectCount++;
+
                 String s3Key = targetFolder + "/" + sourcePath.relativize(file);
+
+                if (doesObjectExist(s3Key)) {
+                    skippedCount++;
+                    System.out.println("Skipped existing file: " + totalObjectCount);
+                    continue;
+                }
 
                 try {
                     uploadFile(file, s3Key);
                     successCount++;
-                    System.out.println("Successfully uploaded " + successCount);
+                    System.out.println("Successfully uploaded " + totalObjectCount);
                 } catch (Exception e) {
-                    failureCount++;
-                    System.err.println("Failed to upload: " + e.getMessage());
+                    System.err.println("Failed to upload: " + totalObjectCount + " -> " + e.getMessage());
                 }
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to read files from directory: " + e.getMessage());
         }
 
-        if (failureCount == 0) {
-            System.out.println("All files were uploaded successfully!");
-        } else {
-            System.out.println("Some files failed to upload. Total failures: " + failureCount);
-        }
+        System.out.println("\nUpload Summary:");
+        System.out.println("Total files processed: " + totalObjectCount);
+        System.out.println("Successfully uploaded: " + successCount);
+        System.out.println("Skipped (already exists): " + skippedCount);
+        System.out.println("Failed to upload: " + (totalObjectCount - successCount - skippedCount));
     }
 
     private void uploadFile(Path filePath, String s3Key) throws IOException {
@@ -69,5 +79,18 @@ public class S3FileUploader {
                 .build();
 
         s3Client.putObject(putObjectRequest, filePath);
+    }
+
+    private boolean doesObjectExist(String s3Key) {
+        try {
+            HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+                    .bucket(targetBucket)
+                    .key(s3Key)
+                    .build();
+            HeadObjectResponse response = s3Client.headObject(headObjectRequest);
+            return response != null;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
