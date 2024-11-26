@@ -1,5 +1,7 @@
 package com.s3utility;
 
+import java.util.Scanner;
+
 import io.github.cdimascio.dotenv.Dotenv;
 import software.amazon.awssdk.regions.Region;
 
@@ -15,9 +17,30 @@ public class Main {
         String targetBucket = dotenv.get("AWS_TARGET_BUCKET");
         String targetFolder = dotenv.get("AWS_TARGET_FOLDER");
 
-//        s3FileCopy(accessKey, secretKey, region, sourceBucket, sourceFolder, targetBucket, targetFolder);
-//        s3FileDownload(accessKey, secretKey, region, sourceBucket, sourceFolder);
-        s3FileUpload(accessKey, secretKey, region, targetBucket, targetFolder);
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Select operation:");
+        System.out.println("1. Copy files");
+        System.out.println("2. Download files");
+        System.out.println("3. Upload files");
+        System.out.print("Enter choice: ");
+
+        int choice = scanner.nextInt();
+
+        switch (choice) {
+            case 1:
+                s3FileCopy(accessKey, secretKey, region, sourceBucket, sourceFolder, targetBucket, targetFolder);
+                break;
+            case 2:
+                s3FileDownload(accessKey, secretKey, region, sourceBucket, sourceFolder);
+                break;
+            case 3:
+                s3FileUpload(accessKey, secretKey, region, targetBucket, targetFolder);
+                break;
+            default:
+                System.out.println("Invalid choice. Exiting...");
+        }
+
+        scanner.close();
     }
 
     private static void s3FileCopy(String accessKey, String secretKey, Region region,
