@@ -89,8 +89,8 @@ public class S3FileUploader {
                     .bucket(targetBucket)
                     .key(s3Key)
                     .build();
-            HeadObjectResponse response = s3Client.headObject(headObjectRequest);
-            return response != null;
+            s3Client.headObject(headObjectRequest);
+            return true;
         } catch (Exception e) {
             return false;
         }
