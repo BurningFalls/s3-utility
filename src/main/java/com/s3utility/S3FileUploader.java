@@ -48,14 +48,6 @@ public class S3FileUploader {
 
                 String s3Key = targetFolder + "/" + sourcePath.relativize(file);
 
-                System.out.println("s3Key: " + s3Key);
-
-                if (doesObjectExist(s3Key)) {
-                    skippedCount++;
-                    System.out.println("Skipped existing file: " + totalObjectCount);
-                    continue;
-                }
-
                 try {
                     uploadFile(file, s3Key);
                     successCount++;
@@ -82,20 +74,5 @@ public class S3FileUploader {
                 .build();
 
         s3Client.putObject(putObjectRequest, filePath);
-    }
-
-    private boolean doesObjectExist(String s3Key) {
-        try {
-            s3Client.getObject(GetObjectRequest.builder()
-                    .bucket(targetBucket)
-                    .key(s3Key)
-                    .build());
-            return true;
-        } catch (software.amazon.awssdk.services.s3.model.NoSuchKeyException e) {
-            return false;
-        } catch (Exception e) {
-            System.err.println("Error checking object existence: " + e.getMessage());
-            return false;
-        }
     }
 }
