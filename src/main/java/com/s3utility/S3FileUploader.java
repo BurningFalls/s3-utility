@@ -44,6 +44,8 @@ public class S3FileUploader {
         int successCount = 0;
         int skippedCount = 0;
 
+
+
         try (Stream<Path> files = Files.walk(sourcePath)) {
             for (Path file : (Iterable<Path>) files.filter(Files::isRegularFile)::iterator) {
                 totalObjectCount++;
@@ -86,18 +88,12 @@ public class S3FileUploader {
 
     private boolean doesObjectExist(String s3Key) {
         try {
-            ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
+            s3Client.getObject(GetObjectRequest.builder()
                     .bucket(targetBucket)
-                    .prefix(s3Key)
-                    .maxKeys(1)
-                    .build();
-
-            ListObjectsV2Response listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
-
-            return listObjectsResponse.contents().stream()
-                    .anyMatch(s3Object -> s3Object.key().equals(s3Key));
-        } catch (Exception e) {
-            System.err.println("Error checking object existence: " + e.getMessage());
+                    .key(s3Key)
+                    .build());
+            return true;
+        } catch (software.amazon.awssdk.services.s3.model.NoSuchKeyException e) {
             return false;
         }
     }
