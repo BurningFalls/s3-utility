@@ -92,6 +92,7 @@ public class S3FileUploader {
             s3Client.headObject(headObjectRequest);
             return true;
         } catch (Exception e) {
+            System.out.println("error: " + e.getMessage());
             return false;
         }
     }
