@@ -13,6 +13,8 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 public class S3FileUploader {
@@ -48,6 +50,12 @@ public class S3FileUploader {
 
                 String s3Key = targetFolder + "/" + sourcePath.relativize(file);
 
+                if (doesObjectExist(s3Key)) {
+                    skippedCount++;
+                    System.out.println("Skipped existing file: " + totalObjectCount);
+                    continue;
+                }
+
                 try {
                     uploadFile(file, s3Key);
                     successCount++;
@@ -74,5 +82,23 @@ public class S3FileUploader {
                 .build();
 
         s3Client.putObject(putObjectRequest, filePath);
+    }
+
+    private boolean doesObjectExist(String s3Key) {
+        try {
+            ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
+                    .bucket(targetBucket)
+                    .prefix(s3Key)
+                    .maxKeys(1)
+                    .build();
+
+            ListObjectsV2Response listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
+
+            return listObjectsResponse.contents().stream()
+                    .anyMatch(s3Object -> s3Object.key().equals(s3Key));
+        } catch (Exception e) {
+            System.err.println("Error checking object existence: " + e.getMessage());
+            return false;
+        }
     }
 }
