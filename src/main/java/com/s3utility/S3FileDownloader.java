@@ -54,13 +54,14 @@ public class S3FileDownloader {
 
             ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
             List<S3Object> objects = listResponse.contents();
-            totalObjectCount += objects.size();
 
             for (S3Object object : objects) {
                 String key = object.key();
                 if (key.endsWith("/")) {
                     continue;
                 }
+
+                totalObjectCount++;
 
                 Path filePath = destinationPath.resolve(key);
                 if (Files.exists(filePath)) {
