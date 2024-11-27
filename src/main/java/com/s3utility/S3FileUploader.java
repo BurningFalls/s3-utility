@@ -10,6 +10,7 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -85,14 +86,15 @@ public class S3FileUploader {
 
     private boolean doesObjectExist(String s3Key) {
         try {
-            HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+            s3Client.getObject(GetObjectRequest.builder()
                     .bucket(targetBucket)
                     .key(s3Key)
-                    .build();
-            s3Client.headObject(headObjectRequest);
+                    .build());
             return true;
+        } catch (software.amazon.awssdk.services.s3.model.NoSuchKeyException e) {
+            return false;
         } catch (Exception e) {
-            System.out.println("error: " + e.getMessage());
+            System.err.println("Error checking object existence: " + e.getMessage());
             return false;
         }
     }
