@@ -47,6 +47,8 @@ public class S3FileUploader {
 
                 String s3Key = targetFolder + "/" + sourcePath.relativize(file);
 
+                System.out.println("s3Key: " + s3Key);
+
                 if (doesObjectExist(s3Key)) {
                     skippedCount++;
                     System.out.println("Skipped existing file: " + totalObjectCount);
